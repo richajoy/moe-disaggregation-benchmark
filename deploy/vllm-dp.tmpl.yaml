@@ -1,0 +1,36 @@
+# One vLLM server pod using NGPU GPUs via vLLM's own data parallelism (internal load balancer).
+# Rendered by render.sh: NAME, NGPU, ARGS.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: NAME, namespace: llm-d, labels: { app: NAME } }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: NAME } }
+  strategy: { type: Recreate }
+  template:
+    metadata: { labels: { app: NAME } }
+    spec:
+      hostIPC: true
+      containers:
+      - name: vllm
+        image: docker.io/vllm/vllm-openai:v0.32.0
+        imagePullPolicy: IfNotPresent
+        command: ["vllm", "serve", "Qwen/Qwen3-30B-A3B"]
+        args: [ARGS]
+        env:
+        - { name: HF_HOME, value: /hf }
+        - { name: HF_HUB_OFFLINE, value: "1" }
+        - { name: VLLM_LOGGING_LEVEL, value: INFO }
+        ports: [ { containerPort: 8000, name: http } ]
+        readinessProbe: { httpGet: { path: /health, port: 8000 }, periodSeconds: 5, failureThreshold: 600 }
+        resources: { limits: { nvidia.com/gpu: NGPU } }
+        volumeMounts: [ { name: hf, mountPath: /hf }, { name: shm, mountPath: /dev/shm } ]
+      volumes:
+      # Host path of the node's Hugging Face cache (default /var/lib/hf-cache); edit for your node.
+      - { name: hf, hostPath: { path: /var/lib/hf-cache, type: Directory } }
+      - { name: shm, emptyDir: { medium: Memory, sizeLimit: 120Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: NAME, namespace: llm-d }
+spec: { selector: { app: NAME }, ports: [ { name: http, port: 8000, targetPort: 8000 } ] }

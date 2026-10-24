@@ -1,0 +1,33 @@
+# Tune fused-MoE Triton configs for Qwen3-30B-A3B at TP1 (E=128, N=768) on one H100 (GPU 3, pinned, not
+# accounted by the scheduler so it can share the node with the pinned P/D pods on GPUs 0-2).
+apiVersion: v1
+kind: Pod
+metadata: { name: moe-tune, namespace: llm-d }
+spec:
+  restartPolicy: Never
+  runtimeClassName: nvidia
+  containers:
+  - name: tune
+    image: docker.io/vllm/vllm-openai:v0.32.0
+    command: ["bash", "-c"]
+    args:
+    - |
+      pip install -q ray 2>&1 | tail -1
+      cd /work
+      CFG=/usr/local/lib/python3.12/dist-packages/vllm/model_executor/layers/fused_moe/configs
+      BS="1 2 4 8 16 32 64 128 256 512 1024 2048 4096"
+      echo "== default config (no E=128,N=768 H100 file)"; python3 benchmark_moe.py --model Qwen/Qwen3-30B-A3B --tp-size 1 --dtype auto --batch-size $BS 2>&1 | grep -E "Batch size|Kernel time|default" | tee /work/bench-default.log
+      mkdir -p /work/h200cfg && cp "$CFG/E=128,N=768,device_name=NVIDIA_H200.json" "/work/h200cfg/E=128,N=768,device_name=NVIDIA_H100_80GB_HBM3.json"
+      echo "== H200 config renamed for H100"; VLLM_TUNED_CONFIG_FOLDER=/work/h200cfg python3 benchmark_moe.py --model Qwen/Qwen3-30B-A3B --tp-size 1 --dtype auto --batch-size $BS 2>&1 | grep -E "Batch size|Kernel time|configuration" | tee /work/bench-h200cfg.log
+      echo BENCH_DONE
+    env:
+    - { name: HF_HOME, value: /hf }
+    - { name: HF_HUB_OFFLINE, value: "1" }
+    - { name: NVIDIA_VISIBLE_DEVICES, value: all }
+    - { name: CUDA_VISIBLE_DEVICES, value: "3" }
+    volumeMounts: [ { name: hf, mountPath: /hf }, { name: work, mountPath: /work }, { name: shm, mountPath: /dev/shm } ]
+  volumes:
+  # Host paths: the node's Hugging Face cache and a writable directory for tuner output. Edit for your node.
+  - { name: hf, hostPath: { path: /var/lib/hf-cache, type: Directory } }
+  - { name: work, hostPath: { path: /var/lib/moe-tune, type: DirectoryOrCreate } }
+  - { name: shm, emptyDir: { medium: Memory, sizeLimit: 16Gi } }

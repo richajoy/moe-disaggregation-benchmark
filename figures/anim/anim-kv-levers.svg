@@ -1,0 +1,128 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 572" width="960" height="572" role="img" aria-labelledby="t d">
+<!--
+Number sources (every number in this figure), all H100, agg 4x TP1, prefix workload G=128 x 2,000 + 300 unique tokens, OSL 200:
+  req/s, TTFT p90 and ITL p90 at c=1024: data/h100/prefix-agg-4x-tp1-{bf16,bf16-offload,fp8kv,fp8kv-offload}.points.json
+    (45.4 / 53.3 / 82.7 / 97.9 req/s; TTFT p90 17.7 / 14.9 / 7.9 / 6.2 s; ITL p90 26.1 / 23.1 / 38.2 / 33.2 ms).
+  GPU KV tokens per pod (124,528 BF16, 249,568 FP8), prefix reuse GPU / total (30.9/30.9, 32.7/76.8, 55.5/55.5, 55.8/76.8 %),
+    100 GiB CPU tier per pod: data/server-metrics.json (kv_capacity_tokens, prefix_hits_h100_prefix_workload).
+  Bar heights: GPU KV scaled to the 256k-token working set; reuse bar 2 px per percent; req/s bar scaled to 97.9.
+-->
+<title id="t">KV-capacity levers on H100: FP8 KV and CPU offload</title>
+<desc id="d">Animated comparison of four aggregated 4x TP1 arms on H100 under overflowing prefix traffic. GPU KV per pod is 124,528 tokens in BF16 and 249,568 in FP8, against a 256k-token working set; two arms add a 100 GiB CPU offload tier. Throughput at concurrency 1024 is 45.4 req/s (BF16), 53.3 (BF16 plus offload), 82.7 (FP8) and 97.9 (FP8 plus offload), with TTFT p90 17.7, 14.9, 7.9 and 6.2 s and ITL p90 26.1, 23.1, 38.2 and 33.2 ms.</desc>
+<style>
+  .bg { fill: #ffffff; }
+  .ink { fill: #0b0b0b; } .muted { fill: #52514e; }
+  .line { stroke: #8a8985; } .lfill { fill: #8a8985; }
+  .box { fill: #f4f4f2; stroke: #52514e; }
+  .pod { fill: none; stroke: #52514e; }
+  .wt { fill: #ffffff; }
+  text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .title { font-size: 17px; font-weight: 600; }
+  .label { font-size: 13px; } .small { font-size: 11.5px; } .bold { font-weight: 600; }
+  .big { font-size: 16px; font-weight: 600; } .huge { font-size: 20px; font-weight: 700; }
+  .still { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #0d1117; }
+    .ink { fill: #ececea; } .muted { fill: #a8a7a3; }
+    .line { stroke: #6e7681; } .lfill { fill: #6e7681; }
+    .box { fill: #161b22; stroke: #a8a7a3; }
+    .pod { stroke: #a8a7a3; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+    .motion { display: none; }
+    .still { display: inline; }
+  }
+  @keyframes gpu { 0.00% { transform: scaleY(0); } 3.00% { transform: scaleY(0); } 18.00% { transform: scaleY(1); } 97.00% { transform: scaleY(1); } 100.00% { transform: scaleY(0); } }
+  @keyframes cpu { 0.00% { opacity: 0; transform: translateY(14px); } 20.00% { opacity: 0; transform: translateY(14px); } 28.00% { opacity: 1; transform: translateY(0px); } 97.00% { opacity: 1; transform: translateY(0px); } 100.00% { opacity: 0; transform: translateY(14px); } }
+  @keyframes hitg { 0.00% { transform: scaleX(0); } 30.00% { transform: scaleX(0); } 40.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes hitc { 0.00% { transform: scaleX(0); } 40.00% { transform: scaleX(0); } 50.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes rps { 0.00% { transform: scaleX(0); } 52.00% { transform: scaleX(0); } 66.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes cost { 0.00% { opacity: 0; } 68.00% { opacity: 0; } 74.00% { opacity: 1; } 97.00% { opacity: 1; } 100.00% { opacity: 0; } }
+</style>
+<rect class="bg" x="0" y="0" width="960" height="572" rx="10"/>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a8985"/></marker></defs>
+<text class="ink title" x="24.0" y="34.0">Two KV-capacity levers on overflowing prefix traffic: FP8 KV and CPU offload add up</text>
+<text class="muted small" x="24.0" y="54.0">Aggregated, not P/D: H100x4, 4x TP1, 128 shared 2000-token prefixes + 300 unique, OSL 200. Varies KV dtype and CPU tier; one run each.</text>
+<text class="ink label bold" x="24.0" y="88.0">O0: BF16, GPU only</text>
+<rect x="24.0" y="104.0" width="90.0" height="200.0" rx="2" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="4 3"/>
+<rect x="24" y="206.7" width="90" height="97.3" rx="2" fill="#2a78d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: center bottom; animation: gpu 12s ease-out infinite;"/>
+<text class="muted small" x="124.0" y="116.0">dashed box =</text>
+<text class="muted small" x="124.0" y="132.0">256k-token working</text>
+<text class="muted small" x="124.0" y="148.0">set per pod</text>
+<text class="muted small" x="124.0" y="218.7">GPU KV per pod</text>
+<text class="ink small bold" x="124.0" y="234.7">124,528 tokens</text>
+<text class="muted small" x="124.0" y="250.7">BF16</text>
+<rect x="24.0" y="318.0" width="208.0" height="36.0" rx="4" stroke="#8a8985" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+<text class="muted small" x="128.0" y="341.0" text-anchor="middle">no CPU tier</text>
+<text class="muted small" x="24.0" y="378.0">prefix reuse (of prompt tokens)</text>
+<rect x="24.0" y="386.0" width="200.0" height="16.0" rx="2" class="box" />
+<rect x="24" y="386" width="61.8" height="16" rx="2" fill="#2a78d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: left center; animation: hitg 12s ease-out infinite;"/>
+<text class="ink small" x="24.0" y="418.0">GPU 30.9% = total 30.9%</text>
+<text class="muted small" x="24.0" y="446.0">req/s at c=1024</text>
+<rect x="24" y="454" width="92.7" height="24" rx="2" fill="#eb6834" style="transform-box: fill-box; transform-origin: left center; animation: rps 12s ease-out infinite;"/>
+<text class="wt label bold" x="32.0" y="471.0">45.4</text>
+<g style="animation: cost 12s linear infinite;"><text class="ink big" x="24.0" y="506.0">TTFT p90 17.7 s</text>
+<text class="muted small" x="24.0" y="522.0">ITL p90 26.1 ms (c=1024)</text>
+</g>
+<text class="ink label bold" x="256.0" y="88.0">O1: BF16 + CPU offload</text>
+<rect x="256.0" y="104.0" width="90.0" height="200.0" rx="2" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="4 3"/>
+<rect x="256" y="206.7" width="90" height="97.3" rx="2" fill="#2a78d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: center bottom; animation: gpu 12s ease-out infinite;"/>
+<text class="muted small" x="356.0" y="218.7">GPU KV per pod</text>
+<text class="ink small bold" x="356.0" y="234.7">124,528 tokens</text>
+<text class="muted small" x="356.0" y="250.7">BF16</text>
+<g style="transform-box: fill-box; animation: cpu 12s ease-out infinite;"><rect x="256.0" y="318.0" width="208.0" height="36.0" rx="4" fill="#1baf7a" fill-opacity="0.22" stroke="#1baf7a" stroke-width="1.5" />
+<text class="ink small bold" x="360.0" y="341.0" text-anchor="middle">CPU offload tier: 100 GiB/pod</text>
+</g>
+<text class="muted small" x="256.0" y="378.0">prefix reuse (of prompt tokens)</text>
+<rect x="256.0" y="386.0" width="200.0" height="16.0" rx="2" class="box" />
+<rect x="256" y="386" width="65.4" height="16" rx="2" fill="#2a78d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: left center; animation: hitg 12s ease-out infinite;"/>
+<rect x="321.4" y="386" width="88.2" height="16" rx="2" fill="#1baf7a" style="transform-box: fill-box; transform-origin: left center; animation: hitc 12s ease-out infinite;"/>
+<text class="ink small" x="256.0" y="418.0">GPU 32.7%, total 76.8%</text>
+<text class="muted small" x="256.0" y="446.0">req/s at c=1024</text>
+<rect x="256" y="454" width="108.9" height="24" rx="2" fill="#eb6834" style="transform-box: fill-box; transform-origin: left center; animation: rps 12s ease-out infinite;"/>
+<text class="wt label bold" x="264.0" y="471.0">53.3</text>
+<g style="animation: cost 12s linear infinite;"><text class="ink big" x="256.0" y="506.0">TTFT p90 14.9 s</text>
+<text class="muted small" x="256.0" y="522.0">ITL p90 23.1 ms (c=1024)</text>
+</g>
+<text class="ink label bold" x="488.0" y="88.0">Q1: FP8 KV</text>
+<rect x="488.0" y="104.0" width="90.0" height="200.0" rx="2" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="4 3"/>
+<rect x="488" y="109.0" width="90" height="195.0" rx="2" fill="#6250d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: center bottom; animation: gpu 12s ease-out infinite;"/>
+<text class="muted small" x="588.0" y="121.0">GPU KV per pod</text>
+<text class="ink small bold" x="588.0" y="137.0">249,568 tokens</text>
+<text class="muted small" x="588.0" y="153.0">FP8</text>
+<rect x="488.0" y="318.0" width="208.0" height="36.0" rx="4" stroke="#8a8985" stroke-width="1" fill="none" stroke-dasharray="3 3"/>
+<text class="muted small" x="592.0" y="341.0" text-anchor="middle">no CPU tier</text>
+<text class="muted small" x="488.0" y="378.0">prefix reuse (of prompt tokens)</text>
+<rect x="488.0" y="386.0" width="200.0" height="16.0" rx="2" class="box" />
+<rect x="488" y="386" width="111.0" height="16" rx="2" fill="#6250d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: left center; animation: hitg 12s ease-out infinite;"/>
+<text class="ink small" x="488.0" y="418.0">GPU 55.5% = total 55.5%</text>
+<text class="muted small" x="488.0" y="446.0">req/s at c=1024</text>
+<rect x="488" y="454" width="168.9" height="24" rx="2" fill="#eb6834" style="transform-box: fill-box; transform-origin: left center; animation: rps 12s ease-out infinite;"/>
+<text class="wt label bold" x="496.0" y="471.0">82.7</text>
+<g style="animation: cost 12s linear infinite;"><text class="ink big" x="488.0" y="506.0">TTFT p90 7.9 s</text>
+<text class="muted small" x="488.0" y="522.0">ITL p90 38.2 ms (c=1024)</text>
+</g>
+<text class="ink label bold" x="720.0" y="88.0">Q1+O1: FP8 KV + offload</text>
+<rect x="720.0" y="104.0" width="90.0" height="200.0" rx="2" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="4 3"/>
+<rect x="720" y="109.0" width="90" height="195.0" rx="2" fill="#6250d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: center bottom; animation: gpu 12s ease-out infinite;"/>
+<text class="muted small" x="820.0" y="121.0">GPU KV per pod</text>
+<text class="ink small bold" x="820.0" y="137.0">249,568 tokens</text>
+<text class="muted small" x="820.0" y="153.0">FP8</text>
+<g style="transform-box: fill-box; animation: cpu 12s ease-out infinite;"><rect x="720.0" y="318.0" width="208.0" height="36.0" rx="4" fill="#1baf7a" fill-opacity="0.22" stroke="#1baf7a" stroke-width="1.5" />
+<text class="ink small bold" x="824.0" y="341.0" text-anchor="middle">CPU offload tier: 100 GiB/pod</text>
+</g>
+<text class="muted small" x="720.0" y="378.0">prefix reuse (of prompt tokens)</text>
+<rect x="720.0" y="386.0" width="200.0" height="16.0" rx="2" class="box" />
+<rect x="720" y="386" width="111.6" height="16" rx="2" fill="#6250d6" fill-opacity="0.85" style="transform-box: fill-box; transform-origin: left center; animation: hitg 12s ease-out infinite;"/>
+<rect x="831.6" y="386" width="42.0" height="16" rx="2" fill="#1baf7a" style="transform-box: fill-box; transform-origin: left center; animation: hitc 12s ease-out infinite;"/>
+<text class="ink small" x="720.0" y="418.0">GPU 55.8%, total 76.8%</text>
+<text class="muted small" x="720.0" y="446.0">req/s at c=1024</text>
+<rect x="720" y="454" width="200.0" height="24" rx="2" fill="#eb6834" style="transform-box: fill-box; transform-origin: left center; animation: rps 12s ease-out infinite;"/>
+<text class="wt label bold" x="728.0" y="471.0">97.9</text>
+<g style="animation: cost 12s linear infinite;"><text class="ink big" x="720.0" y="506.0">TTFT p90 6.2 s</text>
+<text class="muted small" x="720.0" y="522.0">ITL p90 33.2 ms (c=1024)</text>
+</g>
+<text class="ink small" x="24.0" y="540.0">FP8 doubles GPU-resident KV, which enlarges the running set as well as the cache; offload extends the cache but not the running set.</text>
+<text class="muted small" x="24.0" y="558.0">Legend: blue/violet = GPU tier (BF16/FP8), aqua = CPU tier, orange = throughput. FP8 KV output quality not checked. Latency: p90, c=1024.</text>
+</svg>

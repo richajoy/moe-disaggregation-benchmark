@@ -1,0 +1,156 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="960" height="600" role="img" aria-labelledby="t d">
+<!--
+Number sources (every number in this figure), all H100, P/D 2P(TP1):1D(TP2), prompt-heavy (4,000 in / 200 out):
+  12,005 / 3,024 / 1,536 descriptors per rank-transfer and 1.8 / 10.7 / 12.9 GB/s (c64 window), about 16 KB pieces at block 16,
+    45 to 77% post share (TP1-to-TP1 knob arms), NVLink 1-4% (Nsight Systems, 1P:2D TP1 pull block 16, c=256; hetero path not captured):
+    data/server-metrics.json (nixl_h100_hetero_tp_2p1d_dtp2_prompt_heavy, nixl_h100_knob_arms_1p2d_tp1_prompt_heavy, nsys_*).
+  c=256 req/s, TTFT p90 and ITL p90: data/h100/pd-2p1d-dtp2-bs16.points.json (13.9 req/s, 9.8 s, 73.4 ms),
+    pd-2p1d-dtp2-bs64-run1.points.json (25.8, 6.9 s, 17.0 ms), pd-2p1d-dtp2-bs128.points.json (26.1, 6.9 s, 16.3 ms).
+  Packet widths (1:4:8) follow block size 16:64:128; emission spacing is computed so width/interval is proportional to GB/s.
+-->
+<title id="t">Block size decides whether the KV transfer is the bottleneck in 2P (TP1) : 1D (TP2) P/D</title>
+<desc id="d">Same 2P (TP1) : 1D (TP2) setup and prompt-heavy workload as the request-path animation; only the KV block size changes. Animated comparison of NIXL KV transfers from a prefill TP1 pod to one decode TP2 rank at block sizes 16, 64 and 128. Each decode rank reads half of every block's KV heads, so block 16 needs 12,005 small descriptors (about 16 KB each) and reaches 1.8 GB/s; block 64 needs 3,024 and reaches 10.7 GB/s; block 128 needs 1,536 and reaches 12.9 GB/s. In a separate TP1-to-TP1 capture NVLink was 1-4% utilized and descriptor posting took 45 to 77% of each transfer; this heterogeneous-TP path was not profiled.</desc>
+<style>
+  .bg { fill: #ffffff; }
+  .ink { fill: #0b0b0b; } .muted { fill: #52514e; }
+  .line { stroke: #8a8985; } .lfill { fill: #8a8985; }
+  .box { fill: #f4f4f2; stroke: #52514e; }
+  .pod { fill: none; stroke: #52514e; }
+  .wt { fill: #ffffff; }
+  text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .title { font-size: 17px; font-weight: 600; }
+  .label { font-size: 13px; } .small { font-size: 11.5px; } .bold { font-weight: 600; }
+  .big { font-size: 16px; font-weight: 600; } .huge { font-size: 20px; font-weight: 700; }
+  .still { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #0d1117; }
+    .ink { fill: #ececea; } .muted { fill: #a8a7a3; }
+    .line { stroke: #6e7681; } .lfill { fill: #6e7681; }
+    .box { fill: #161b22; stroke: #a8a7a3; }
+    .pod { stroke: #a8a7a3; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+    .motion { display: none; }
+    .still { display: inline; }
+  }
+  @keyframes p0 { 0.00% { transform: translate(262.0px, 233.0px); opacity: 1; } 53.33% { transform: translate(696.0px, 233.0px); opacity: 1; } 53.83% { transform: translate(696.0px, 233.0px); opacity: 0; } 100.00% { transform: translate(696.0px, 233.0px); opacity: 0; } }
+  @keyframes post0 { 0.00% { opacity: 1; } 6.00% { opacity: 0; } 100.00% { opacity: 0; } }
+  @keyframes p1 { 0.00% { transform: translate(262.0px, 337.0px); opacity: 1; } 52.84% { transform: translate(678.0px, 337.0px); opacity: 1; } 53.34% { transform: translate(678.0px, 337.0px); opacity: 0; } 100.00% { transform: translate(678.0px, 337.0px); opacity: 0; } }
+  @keyframes post1 { 0.00% { opacity: 1; } 6.00% { opacity: 0; } 100.00% { opacity: 0; } }
+  @keyframes p2 { 0.00% { transform: translate(262.0px, 441.0px); opacity: 1; } 47.78% { transform: translate(654.0px, 441.0px); opacity: 1; } 48.28% { transform: translate(654.0px, 441.0px); opacity: 0; } 100.00% { transform: translate(654.0px, 441.0px); opacity: 0; } }
+  @keyframes post2 { 0.00% { opacity: 1; } 6.00% { opacity: 0; } 100.00% { opacity: 0; } }
+</style>
+<rect class="bg" x="0" y="0" width="960" height="600" rx="10"/>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a8985"/></marker></defs>
+<text class="ink title" x="24.0" y="34.0">Block size decides if the KV transfer is the bottleneck: at block 16 it is, at 64 it is not</text>
+<text class="muted small" x="24.0" y="54.0">Same 2P (TP1) : 1D (TP2) and prompt-heavy load as the request-path figure; only block size varies. GB/s at c=64; one run per size.</text>
+<text class="ink label bold" x="24.0" y="90.0">Why: each decode rank reads only half of every block's KV heads</text>
+<rect x="60.0" y="104.0" width="120.0" height="26.0" rx="2" fill="#2a78d6" fill-opacity="0.25" stroke="#2a78d6" stroke-width="1.5" />
+<rect x="60.0" y="130.0" width="120.0" height="26.0" rx="2" fill="#eb6834" fill-opacity="0.25" stroke="#eb6834" stroke-width="1.5" />
+<text class="ink small" x="120.0" y="121.0" text-anchor="middle">first half of heads</text>
+<text class="ink small" x="120.0" y="147.0" text-anchor="middle">second half of heads</text>
+<text class="muted small" x="120.0" y="174.0" text-anchor="middle">one KV block on prefill (TP1)</text>
+<path class="line" d="M184,117 L300,112" stroke-width="1.5" fill="none" marker-end="url(#head)" />
+<path class="line" d="M184,143 L300,150" stroke-width="1.5" fill="none" marker-end="url(#head)" />
+<rect x="304.0" y="98.0" width="120.0" height="28.0" rx="4" fill="#2a78d6" fill-opacity="0.12" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small bold" x="364.0" y="117.0" text-anchor="middle">decode rank 0</text>
+<rect x="304.0" y="136.0" width="120.0" height="28.0" rx="4" fill="#eb6834" fill-opacity="0.12" stroke="#eb6834" stroke-width="1.5" />
+<text class="ink small bold" x="364.0" y="155.0" text-anchor="middle">decode rank 1</text>
+<text class="ink small" x="450.0" y="110.0">So every block becomes a separate read per rank, and each read is one</text>
+<text class="ink small" x="450.0" y="126.0">NIXL descriptor the CPU must post. At block 16 that is about 12,000</text>
+<text class="ink small" x="450.0" y="142.0">descriptors of about 16 KB per rank-transfer. Bigger blocks mean fewer,</text>
+<text class="ink small" x="450.0" y="158.0">larger pieces: descriptors halve with each block-size doubling.</text>
+<line class="line" x1="24" y1="196" x2="936" y2="196" stroke-width="0.6" stroke-dasharray="2 3"/>
+<text class="ink label bold" x="24.0" y="222.0">Block 16 (default)</text>
+<text class="ink small" x="24.0" y="240.0">12,005 descriptors</text>
+<text class="muted small" x="24.0" y="256.0">per rank-transfer</text>
+<text class="muted small" x="24.0" y="272.0">pieces about 16 KB</text>
+<rect x="196.0" y="214.0" width="64.0" height="56.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small bold" x="228.0" y="238.0" text-anchor="middle">prefill</text>
+<text class="muted small" x="228.0" y="254.0" text-anchor="middle">TP1</text>
+<rect x="272.0" y="226.0" width="420.0" height="32.0" rx="16" class="box" fill-opacity="0.5"/>
+<text class="muted small" x="286.0" y="220.0">NVLink (cuda_ipc)</text>
+<rect x="704.0" y="214.0" width="64.0" height="56.0" rx="4" fill="#eb6834" fill-opacity="0.14" stroke="#eb6834" stroke-width="1.5" />
+<text class="ink small bold" x="736.0" y="238.0" text-anchor="middle">decode</text>
+<text class="muted small" x="736.0" y="254.0" text-anchor="middle">rank</text>
+<text class="muted small" x="196.0" y="288.0">c=256: 13.9 req/s, TTFT p90 9.8 s, ITL p90 73.4 ms</text>
+<text class="ink big" x="790.0" y="230.0">1.8 GB/s</text>
+<rect x="790.0" y="240.0" width="140.0" height="12.0" rx="2" class="box" />
+<rect x="790.0" y="240.0" width="19.5" height="12.0" rx="2" fill="#e34948" />
+<text class="muted small" x="790.0" y="268.0">NIXL per rank-transfer</text>
+<g class="motion"><rect x="0" y="0" width="6" height="18" rx="2" fill="#6250d6" style="animation: p0 3.000s linear -0.000s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="6" height="18" rx="2" fill="#6250d6" style="animation: p0 3.000s linear -0.500s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="6" height="18" rx="2" fill="#6250d6" style="animation: p0 3.000s linear -1.000s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="6" height="18" rx="2" fill="#6250d6" style="animation: p0 3.000s linear -1.500s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="6" height="18" rx="2" fill="#6250d6" style="animation: p0 3.000s linear -2.000s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="6" height="18" rx="2" fill="#6250d6" style="animation: p0 3.000s linear -2.500s infinite;"/></g>
+<g class="motion"><circle cx="262" cy="242" r="5" fill="#e87ba4" style="animation: post0 0.500s linear infinite;"/></g>
+<rect class="still" x="276.0" y="233" width="6" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="411.6" y="233" width="6" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="547.2" y="233" width="6" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="682.9" y="233" width="6" height="18" rx="2" fill="#6250d6"/>
+<line class="line" x1="24" y1="300" x2="936" y2="300" stroke-width="0.6" stroke-dasharray="2 3"/>
+<text class="ink label bold" x="24.0" y="326.0">Block 64</text>
+<text class="ink small" x="24.0" y="344.0">3,024 descriptors</text>
+<text class="muted small" x="24.0" y="360.0">per rank-transfer</text>
+<rect x="196.0" y="318.0" width="64.0" height="56.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small bold" x="228.0" y="342.0" text-anchor="middle">prefill</text>
+<text class="muted small" x="228.0" y="358.0" text-anchor="middle">TP1</text>
+<rect x="272.0" y="330.0" width="420.0" height="32.0" rx="16" class="box" fill-opacity="0.5"/>
+<text class="muted small" x="286.0" y="324.0">NVLink (cuda_ipc)</text>
+<rect x="704.0" y="318.0" width="64.0" height="56.0" rx="4" fill="#eb6834" fill-opacity="0.14" stroke="#eb6834" stroke-width="1.5" />
+<text class="ink small bold" x="736.0" y="342.0" text-anchor="middle">decode</text>
+<text class="muted small" x="736.0" y="358.0" text-anchor="middle">rank</text>
+<text class="muted small" x="196.0" y="392.0">c=256: 25.8 req/s, TTFT p90 6.9 s, ITL p90 17.0 ms</text>
+<text class="ink big" x="790.0" y="334.0">10.7 GB/s</text>
+<rect x="790.0" y="344.0" width="140.0" height="12.0" rx="2" class="box" />
+<rect x="790.0" y="344.0" width="116.1" height="12.0" rx="2" fill="#eda100" />
+<text class="muted small" x="790.0" y="372.0">NIXL per rank-transfer</text>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -0.000s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -0.336s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -0.673s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -1.009s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -1.346s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -1.682s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -2.019s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -2.355s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="24" height="18" rx="2" fill="#6250d6" style="animation: p1 3.028s linear -2.692s infinite;"/></g>
+<g class="motion"><circle cx="262" cy="346" r="5" fill="#e87ba4" style="animation: post1 0.336s linear infinite;"/></g>
+<rect class="still" x="276.0" y="337" width="24" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="363.5" y="337" width="24" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="451.0" y="337" width="24" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="538.4" y="337" width="24" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="625.9" y="337" width="24" height="18" rx="2" fill="#6250d6"/>
+<line class="line" x1="24" y1="404" x2="936" y2="404" stroke-width="0.6" stroke-dasharray="2 3"/>
+<text class="ink label bold" x="24.0" y="430.0">Block 128</text>
+<text class="ink small" x="24.0" y="448.0">1,536 descriptors</text>
+<text class="muted small" x="24.0" y="464.0">per rank-transfer</text>
+<rect x="196.0" y="422.0" width="64.0" height="56.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small bold" x="228.0" y="446.0" text-anchor="middle">prefill</text>
+<text class="muted small" x="228.0" y="462.0" text-anchor="middle">TP1</text>
+<rect x="272.0" y="434.0" width="420.0" height="32.0" rx="16" class="box" fill-opacity="0.5"/>
+<text class="muted small" x="286.0" y="428.0">NVLink (cuda_ipc)</text>
+<rect x="704.0" y="422.0" width="64.0" height="56.0" rx="4" fill="#eb6834" fill-opacity="0.14" stroke="#eb6834" stroke-width="1.5" />
+<text class="ink small bold" x="736.0" y="446.0" text-anchor="middle">decode</text>
+<text class="muted small" x="736.0" y="462.0" text-anchor="middle">rank</text>
+<text class="muted small" x="196.0" y="496.0">c=256: 26.1 req/s, TTFT p90 6.9 s, ITL p90 16.3 ms</text>
+<text class="ink big" x="790.0" y="438.0">12.9 GB/s</text>
+<rect x="790.0" y="448.0" width="140.0" height="12.0" rx="2" class="box" />
+<rect x="790.0" y="448.0" width="140.0" height="12.0" rx="2" fill="#008300" />
+<text class="muted small" x="790.0" y="476.0">NIXL per rank-transfer</text>
+<g class="motion"><rect x="0" y="0" width="48" height="18" rx="2" fill="#6250d6" style="animation: p2 3.349s linear -0.000s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="48" height="18" rx="2" fill="#6250d6" style="animation: p2 3.349s linear -0.558s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="48" height="18" rx="2" fill="#6250d6" style="animation: p2 3.349s linear -1.116s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="48" height="18" rx="2" fill="#6250d6" style="animation: p2 3.349s linear -1.674s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="48" height="18" rx="2" fill="#6250d6" style="animation: p2 3.349s linear -2.233s infinite;"/></g>
+<g class="motion"><rect x="0" y="0" width="48" height="18" rx="2" fill="#6250d6" style="animation: p2 3.349s linear -2.791s infinite;"/></g>
+<g class="motion"><circle cx="262" cy="450" r="5" fill="#e87ba4" style="animation: post2 0.558s linear infinite;"/></g>
+<rect class="still" x="276.0" y="441" width="48" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="412.7" y="441" width="48" height="18" rx="2" fill="#6250d6"/>
+<rect class="still" x="549.5" y="441" width="48" height="18" rx="2" fill="#6250d6"/>
+<rect x="24" y="518" width="12" height="12" rx="2" fill="#6250d6"/><text class="muted small" x="42.0" y="528.0">= one descriptor (one piece of KV), width to scale with block size; spacing set so bytes moved per second match the measured GB/s</text>
+<circle cx="30" cy="544" r="5" fill="#e87ba4"/><text class="muted small" x="42.0" y="548.0">= CPU posts a descriptor</text>
+<text class="ink small bold" x="24.0" y="574.0">Link load: Nsight Systems saw NVLink at 1-4% only in a TP1-to-TP1 capture (1P:2D, block 16, c=256); this hetero path was not profiled.</text>
+<text class="ink small" x="24.0" y="590.0">On TP1-to-TP1 arms posting took 45 to 77% of each transfer at block 16. Here bandwidth rises 7x from block 16 to 128; gains saturate at 64.</text>
+</svg>

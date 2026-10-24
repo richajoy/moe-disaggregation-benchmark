@@ -1,0 +1,299 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="960" height="560" role="img" aria-labelledby="t d">
+<!--
+Number sources (every number in this figure), A100 x8, aggregated TP1 pods, llm-d keda-epp guide, KEDA 2.20.2:
+  2 to 8 pods, 0 requests per new pod, about 6,475 requests and 256 running per original pod (affinity on); 5,126 and 4,861
+    (control originals); 908-1,242 requests per new pod and peak running 69-112 (control); burst TTFT p50/p99 440/1,197 vs 122/164 ms,
+    ITL p50 61.7 vs 31.5 ms, 7,734 vs 10,551 tok/s (+36%); 2 to 4 pods at +6 s, 4 to 8 at +21 s, Ready about 3 min;
+    HPA scale-up stabilization 0 s (guide 300 s): data/server-metrics.json (autoscaling_a100).
+  Latency here is p50 / p99 per phase window, as measured; p90 was not computed for these windows.
+-->
+<title id="t">Autoscaling with prefix affinity starves new pods</title>
+<desc id="d">Two side-by-side animations of KEDA scaling an llm-d deployment from 2 to 8 pods on A100. With the prefix-affinity filter, every request keeps going to the 2 original pods (about 6,475 requests each, 256 running) and the 6 new pods serve 0 requests. With a load-only router the new pods serve 908 to 1,242 requests each, and burst TTFT p99 after all pods are Ready drops from 1,197 ms to 164 ms.</desc>
+<style>
+  .bg { fill: #ffffff; }
+  .ink { fill: #0b0b0b; } .muted { fill: #52514e; }
+  .line { stroke: #8a8985; } .lfill { fill: #8a8985; }
+  .box { fill: #f4f4f2; stroke: #52514e; }
+  .pod { fill: none; stroke: #52514e; }
+  .wt { fill: #ffffff; }
+  text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .title { font-size: 17px; font-weight: 600; }
+  .label { font-size: 13px; } .small { font-size: 11.5px; } .bold { font-weight: 600; }
+  .big { font-size: 16px; font-weight: 600; } .huge { font-size: 20px; font-weight: 700; }
+  .still { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #0d1117; }
+    .ink { fill: #ececea; } .muted { fill: #a8a7a3; }
+    .line { stroke: #6e7681; } .lfill { fill: #6e7681; }
+    .box { fill: #161b22; stroke: #a8a7a3; }
+    .pod { stroke: #a8a7a3; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+    .motion { display: none; }
+    .still { display: inline; }
+  }
+  @keyframes loading { 0.00% { opacity: 0; } 25.00% { opacity: 0; } 26.00% { opacity: 1; } 45.00% { opacity: 1; } 46.00% { opacity: 0; } 100.00% { opacity: 0; } }
+  @keyframes ready { 0.00% { opacity: 0; } 45.00% { opacity: 0; } 46.00% { opacity: 1; } 98.00% { opacity: 1; } 100.00% { opacity: 0; } }
+  @keyframes ph1 { 0.00% { opacity: 1; } 25.00% { opacity: 1; } 25.50% { opacity: 0; } 100.00% { opacity: 0; } }
+  @keyframes ph2 { 0.00% { opacity: 0; } 25.00% { opacity: 0; } 25.50% { opacity: 1; } 45.00% { opacity: 1; } 45.50% { opacity: 0; } 100.00% { opacity: 0; } }
+  @keyframes ph3 { 0.00% { opacity: 0; } 45.00% { opacity: 0; } 45.50% { opacity: 1; } 100.00% { opacity: 1; } }
+  @keyframes r0_0 { 0.00% { transform: translate(246.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(59.0px, 228.0px); opacity: 1; } 4.30% { transform: translate(59.0px, 228.0px); opacity: 0; } 100.00% { transform: translate(59.0px, 228.0px); opacity: 0; } }
+  @keyframes r0_1 { 0.00% { transform: translate(246.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(112.5px, 228.0px); opacity: 1; } 4.30% { transform: translate(112.5px, 228.0px); opacity: 0; } 100.00% { transform: translate(112.5px, 228.0px); opacity: 0; } }
+  @keyframes r1_0 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(527.0px, 228.0px); opacity: 1; } 4.30% { transform: translate(527.0px, 228.0px); opacity: 0; } 100.00% { transform: translate(527.0px, 228.0px); opacity: 0; } }
+  @keyframes r1_1 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(580.5px, 228.0px); opacity: 1; } 4.30% { transform: translate(580.5px, 228.0px); opacity: 0; } 100.00% { transform: translate(580.5px, 228.0px); opacity: 0; } }
+  @keyframes r1_3 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(687.5px, 228.0px); opacity: 1; } 4.30% { transform: translate(687.5px, 228.0px); opacity: 0; } 100.00% { transform: translate(687.5px, 228.0px); opacity: 0; } }
+  @keyframes r1_4 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(741.0px, 228.0px); opacity: 1; } 4.30% { transform: translate(741.0px, 228.0px); opacity: 0; } 100.00% { transform: translate(741.0px, 228.0px); opacity: 0; } }
+  @keyframes r1_5 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(794.5px, 228.0px); opacity: 1; } 4.30% { transform: translate(794.5px, 228.0px); opacity: 0; } 100.00% { transform: translate(794.5px, 228.0px); opacity: 0; } }
+  @keyframes r1_6 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(848.0px, 228.0px); opacity: 1; } 4.30% { transform: translate(848.0px, 228.0px); opacity: 0; } 100.00% { transform: translate(848.0px, 228.0px); opacity: 0; } }
+  @keyframes r1_7 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(901.5px, 228.0px); opacity: 1; } 4.30% { transform: translate(901.5px, 228.0px); opacity: 0; } 100.00% { transform: translate(901.5px, 228.0px); opacity: 0; } }
+  @keyframes r1_2 { 0.00% { transform: translate(714.0px, 142.0px); opacity: 1; } 4.00% { transform: translate(634.0px, 228.0px); opacity: 1; } 4.30% { transform: translate(634.0px, 228.0px); opacity: 0; } 100.00% { transform: translate(634.0px, 228.0px); opacity: 0; } }
+</style>
+<rect class="bg" x="0" y="0" width="960" height="560" rx="10"/>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a8985"/></marker></defs>
+<text class="ink title" x="24.0" y="34.0">KEDA scales 2 to 8 pods: prefix affinity starves the new pods, load-aware routing uses them</text>
+<text class="muted small" x="24.0" y="54.0">Aggregated, not P/D: A100x8, up to 8 TP1 pods, llm-d keda-epp guide, KEDA 2.20.2. Only the router profile varies; one run per arm.</text>
+<rect x="24.0" y="70.0" width="444.0" height="400.0" rx="10" class="pod" stroke-dasharray="5 4"/>
+<text class="ink label bold" x="38.0" y="92.0">Prefix-affinity filter on (guide default)</text>
+<rect x="176.0" y="104.0" width="140.0" height="38.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink label bold" x="246.0" y="128.0" text-anchor="middle">EPP router</text>
+<rect x="38.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small" x="59.0" y="258.0" text-anchor="middle">pod 1</text>
+<text class="muted small" x="59.0" y="276.0" text-anchor="middle">orig.</text>
+<rect x="91.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small" x="112.5" y="258.0" text-anchor="middle">pod 2</text>
+<text class="muted small" x="112.5" y="276.0" text-anchor="middle">orig.</text>
+<rect x="145.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="145.0" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="166.0" y="258.0" text-anchor="middle">pod 3</text>
+<text class="muted small" x="166.0" y="276.0" text-anchor="middle">new</text>
+<rect x="198.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="198.5" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="219.5" y="258.0" text-anchor="middle">pod 4</text>
+<text class="muted small" x="219.5" y="276.0" text-anchor="middle">new</text>
+<rect x="252.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="252.0" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="273.0" y="258.0" text-anchor="middle">pod 5</text>
+<text class="muted small" x="273.0" y="276.0" text-anchor="middle">new</text>
+<rect x="305.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="305.5" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="326.5" y="258.0" text-anchor="middle">pod 6</text>
+<text class="muted small" x="326.5" y="276.0" text-anchor="middle">new</text>
+<rect x="359.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="359.0" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="380.0" y="258.0" text-anchor="middle">pod 7</text>
+<text class="muted small" x="380.0" y="276.0" text-anchor="middle">new</text>
+<rect x="412.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="412.5" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="433.5" y="258.0" text-anchor="middle">pod 8</text>
+<text class="muted small" x="433.5" y="276.0" text-anchor="middle">new</text>
+<path class="line" d="M38.0,304 L38.0,310 L133.5,310 L133.5,304" stroke-width="1" fill="none"/>
+<path class="line" d="M145.0,304 L145.0,310 L454.5,310 L454.5,304" stroke-width="1" fill="none"/>
+<text class="ink small bold" x="38.0" y="328.0">~6,475 req each</text>
+<text class="muted small" x="38.0" y="344.0">256 running each</text>
+<text class="ink small bold" x="151.0" y="328.0">0 requests each, whole burst</text>
+<text class="muted small" x="151.0" y="344.0">6 allocated GPUs sat idle</text>
+<line class="line" x1="38" y1="364" x2="454" y2="364" stroke-width="0.6"/>
+<text class="muted small bold" x="38.0" y="384.0">Burst client, after all 8 pods Ready</text>
+<text class="muted label" x="38.0" y="408.0">TTFT p50 / p99</text>
+<text class="ink label bold" x="174.0" y="408.0">440 / 1,197 ms</text>
+<text class="muted label" x="38.0" y="430.0">ITL p50</text>
+<text class="ink label bold" x="174.0" y="430.0">61.7 ms</text>
+<text class="muted label" x="38.0" y="452.0">client output</text>
+<text class="ink label bold" x="174.0" y="452.0">7,734 tok/s</text>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear 0.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -14.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -14.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -14.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -14.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -13.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -13.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -13.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -13.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -12.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -12.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -12.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -12.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -11.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -11.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -11.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -11.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -10.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -10.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -10.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -10.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -9.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -9.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -9.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -9.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -8.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -8.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -8.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -8.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -7.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -7.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -7.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -7.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -6.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -6.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -6.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -6.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -5.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -5.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -5.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -5.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -4.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -4.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -4.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -4.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -3.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -3.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -3.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -3.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -2.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -2.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -2.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -2.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -1.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -1.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -1.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -1.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -0.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_0 15s linear -0.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r0_1 15s linear -0.25s infinite;"/>
+<path class="line" d="M246.0,142 L59.0,228" stroke-width="0.8" fill="none" />
+<path class="line" d="M246.0,142 L112.5,228" stroke-width="0.8" fill="none" />
+<path class="line" d="M246.0,142 L166.0,228" stroke-width="0.8" fill="none" stroke-dasharray="2 4" opacity="0.5"/>
+<path class="line" d="M246.0,142 L219.5,228" stroke-width="0.8" fill="none" stroke-dasharray="2 4" opacity="0.5"/>
+<path class="line" d="M246.0,142 L273.0,228" stroke-width="0.8" fill="none" stroke-dasharray="2 4" opacity="0.5"/>
+<path class="line" d="M246.0,142 L326.5,228" stroke-width="0.8" fill="none" stroke-dasharray="2 4" opacity="0.5"/>
+<path class="line" d="M246.0,142 L380.0,228" stroke-width="0.8" fill="none" stroke-dasharray="2 4" opacity="0.5"/>
+<path class="line" d="M246.0,142 L433.5,228" stroke-width="0.8" fill="none" stroke-dasharray="2 4" opacity="0.5"/>
+<text class="ink small" x="332.0" y="110.0">affinity keeps</text>
+<text class="ink small" x="332.0" y="124.0">every request on</text>
+<text class="ink small" x="332.0" y="138.0">the 2 cached pods</text>
+<rect x="492.0" y="70.0" width="444.0" height="400.0" rx="10" class="pod" stroke-dasharray="5 4"/>
+<text class="ink label bold" x="506.0" y="92.0">Load-only router (control, no affinity filter)</text>
+<rect x="644.0" y="104.0" width="140.0" height="38.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink label bold" x="714.0" y="128.0" text-anchor="middle">EPP router</text>
+<rect x="506.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small" x="527.0" y="258.0" text-anchor="middle">pod 1</text>
+<text class="muted small" x="527.0" y="276.0" text-anchor="middle">orig.</text>
+<rect x="559.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink small" x="580.5" y="258.0" text-anchor="middle">pod 2</text>
+<text class="muted small" x="580.5" y="276.0" text-anchor="middle">orig.</text>
+<rect x="613.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="613.0" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="634.0" y="258.0" text-anchor="middle">pod 3</text>
+<text class="muted small" x="634.0" y="276.0" text-anchor="middle">new</text>
+<rect x="666.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="666.5" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="687.5" y="258.0" text-anchor="middle">pod 4</text>
+<text class="muted small" x="687.5" y="276.0" text-anchor="middle">new</text>
+<rect x="720.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="720.0" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="741.0" y="258.0" text-anchor="middle">pod 5</text>
+<text class="muted small" x="741.0" y="276.0" text-anchor="middle">new</text>
+<rect x="773.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="773.5" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="794.5" y="258.0" text-anchor="middle">pod 6</text>
+<text class="muted small" x="794.5" y="276.0" text-anchor="middle">new</text>
+<rect x="827.0" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="827.0" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="848.0" y="258.0" text-anchor="middle">pod 7</text>
+<text class="muted small" x="848.0" y="276.0" text-anchor="middle">new</text>
+<rect x="880.5" y="230.0" width="42.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.16" stroke="#2a78d6" stroke-width="1.5" style="animation: ready 15s linear infinite;"/>
+<rect x="880.5" y="230.0" width="42.0" height="64.0" rx="4" stroke="#8a8985" stroke-width="1.2" fill="none" stroke-dasharray="3 3" style="opacity: 0; animation: loading 15s linear infinite;"/>
+<text class="ink small" x="901.5" y="258.0" text-anchor="middle">pod 8</text>
+<text class="muted small" x="901.5" y="276.0" text-anchor="middle">new</text>
+<path class="line" d="M506.0,304 L506.0,310 L601.5,310 L601.5,304" stroke-width="1" fill="none"/>
+<path class="line" d="M613.0,304 L613.0,310 L922.5,310 L922.5,304" stroke-width="1" fill="none"/>
+<text class="ink small bold" x="506.0" y="328.0">5,126 and 4,861</text>
+<text class="muted small" x="506.0" y="344.0">requests</text>
+<text class="ink small bold" x="619.0" y="328.0">908-1,242 requests each</text>
+<text class="muted small" x="619.0" y="344.0">peak running 69-112 per pod</text>
+<line class="line" x1="506" y1="364" x2="922" y2="364" stroke-width="0.6"/>
+<text class="muted small bold" x="506.0" y="384.0">Burst client, after all 8 pods Ready</text>
+<text class="muted label" x="506.0" y="408.0">TTFT p50 / p99</text>
+<text class="ink label bold" x="642.0" y="408.0">122 / 164 ms</text>
+<text class="muted label" x="506.0" y="430.0">ITL p50</text>
+<text class="ink label bold" x="642.0" y="430.0">31.5 ms</text>
+<text class="muted label" x="506.0" y="452.0">client output</text>
+<text class="ink label bold" x="642.0" y="452.0">10,551 tok/s (+36%)</text>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear 0.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -14.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -14.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -14.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -14.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -13.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -13.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -13.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -13.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -12.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -12.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -12.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -12.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -11.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -11.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -11.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -11.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -10.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -10.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -10.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -10.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -9.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -9.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -9.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -9.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -8.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -8.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_3 15s linear -8.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_4 15s linear -8.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_5 15s linear -7.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_6 15s linear -7.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_7 15s linear -7.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -7.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -6.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_2 15s linear -6.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_3 15s linear -6.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_4 15s linear -6.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_5 15s linear -5.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_6 15s linear -5.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_7 15s linear -5.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -5.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -4.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_2 15s linear -4.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_3 15s linear -4.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_4 15s linear -4.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_5 15s linear -3.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_6 15s linear -3.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_7 15s linear -3.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -3.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -2.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_2 15s linear -2.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_3 15s linear -2.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_4 15s linear -2.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_5 15s linear -1.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_6 15s linear -1.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_7 15s linear -1.25s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_0 15s linear -1.00s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_1 15s linear -0.75s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_2 15s linear -0.50s infinite;"/>
+<circle class="motion" r="3.5" fill="#e87ba4" style="opacity: 0; animation: r1_3 15s linear -0.25s infinite;"/>
+<path class="line" d="M714.0,142 L527.0,228" stroke-width="0.8" fill="none" />
+<path class="line" d="M714.0,142 L580.5,228" stroke-width="0.8" fill="none" />
+<path class="line" d="M714.0,142 L634.0,228" stroke-width="0.8" fill="none" style="animation: ready 15s linear infinite;"/>
+<path class="line" d="M714.0,142 L687.5,228" stroke-width="0.8" fill="none" style="animation: ready 15s linear infinite;"/>
+<path class="line" d="M714.0,142 L741.0,228" stroke-width="0.8" fill="none" style="animation: ready 15s linear infinite;"/>
+<path class="line" d="M714.0,142 L794.5,228" stroke-width="0.8" fill="none" style="animation: ready 15s linear infinite;"/>
+<path class="line" d="M714.0,142 L848.0,228" stroke-width="0.8" fill="none" style="animation: ready 15s linear infinite;"/>
+<path class="line" d="M714.0,142 L901.5,228" stroke-width="0.8" fill="none" style="animation: ready 15s linear infinite;"/>
+<text class="muted small" x="24.0" y="498.0">Scale decisions: 2 to 4 pods 6 s after the burst started, 4 to 8 pods at 21 s. New pods Ready about 3 min after container start (model load + torch.compile).</text>
+<g style="animation: ph1 15s linear infinite; opacity: 0;"><text class="ink label bold" x="24.0" y="526.0">Phase: burst on the 2 original pods</text>
+</g>
+<g style="animation: ph2 15s linear infinite; opacity: 0;"><text class="ink label bold" x="24.0" y="526.0">Phase: KEDA adds 6 pods, they load the model (dashed = not Ready)</text>
+</g>
+<g style="animation: ph3 15s linear infinite;"><text class="ink label bold" x="24.0" y="526.0">Phase: all 8 pods Ready. Left: still 2 pods serve. Right: traffic spreads to all 8.</text>
+</g>
+<text class="muted small" x="24.0" y="546.0">Time compressed; dot counts illustrative. HPA scale-up stabilization set to 0 s for the test (guide default 300 s).</text>
+</svg>

@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 548" width="960" height="548" role="img" aria-labelledby="t d">
+<!--
+Number sources (every number in this figure), H100, P/D 2P(TP1):1D(TP2) block 64, prompt-heavy (4,000 in / 200 out), c=256:
+  4,778 ms prefill queue (4,777.5), 359 ms prefill compute (358.8), 52 ms decode queue (52.3), 27 ms NIXL (26.9), 15.9 ms server ITL,
+    50 ms router+sidecar+net residual (49.7), client TTFT mean 5,553.2 ms: data/h100/stage-timings.md, table pd-2p1d-dtp2-bs64-run2,
+    prompt-heavy c=256 row. All are means per request from vLLM histograms.
+  Block-16 contrast (351 ms NIXL, 2,183 ms decode queue, 60.6 ms ITL): same file, table pd-2p1d-dtp2-bs16, prompt-heavy c=256 row.
+  cuda_ipc zero-copy: data/server-metrics.json (transport_check). Bar widths are proportional to the five TTFT components above.
+  Unattributed 288 ms = client TTFT mean 5,553.2 - (49.7 + 4,777.5 + 358.8 + 26.9 + 52.3 = 5,265.2).
+-->
+<title id="t">Where a prompt-heavy request waits in llm-d P/D on H100 at block 64</title>
+<desc id="d">Animated path of one prompt-heavy request through llm-d prefill/decode disaggregation on H100 (2 prefill TP1 pods, 1 decode TP2 pod, block 64, concurrency 256): client, EPP router, routing sidecar on the decode pod, prefill queue (4,778 ms), prefill compute (359 ms), NIXL KV pull over NVLink (27 ms), decode queue (52 ms), then decode steps streaming tokens every 15.9 ms. Router plus sidecar plus network adds 50 ms. At the default block 16 the same setup and load spend 351 ms in the NIXL transfer and 2,183 ms in the decode queue, with ITL 60.6 ms. A to-scale bar shows the prefill queue dominating time to first token.</desc>
+<style>
+  .bg { fill: #ffffff; }
+  .ink { fill: #0b0b0b; } .muted { fill: #52514e; }
+  .line { stroke: #8a8985; } .lfill { fill: #8a8985; }
+  .box { fill: #f4f4f2; stroke: #52514e; }
+  .pod { fill: none; stroke: #52514e; }
+  .wt { fill: #ffffff; }
+  text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; }
+  .title { font-size: 17px; font-weight: 600; }
+  .label { font-size: 13px; } .small { font-size: 11.5px; } .bold { font-weight: 600; }
+  .big { font-size: 16px; font-weight: 600; } .huge { font-size: 20px; font-weight: 700; }
+  .still { display: none; }
+  @media (prefers-color-scheme: dark) {
+    .bg { fill: #0d1117; }
+    .ink { fill: #ececea; } .muted { fill: #a8a7a3; }
+    .line { stroke: #6e7681; } .lfill { fill: #6e7681; }
+    .box { fill: #161b22; stroke: #a8a7a3; }
+    .pod { stroke: #a8a7a3; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; }
+    .motion { display: none; }
+    .still { display: inline; }
+  }
+  @keyframes q0 { 0.00% { transform: translate(540.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(540.0px, 316.0px); opacity: 1; } 16.45% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(540.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(540.0px, 316.0px); opacity: 1; } }
+  @keyframes q1 { 0.00% { transform: translate(515.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(515.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(540.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(540.0px, 316.0px); opacity: 1; } 21.70% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(515.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(515.0px, 316.0px); opacity: 1; } }
+  @keyframes q2 { 0.00% { transform: translate(490.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(490.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(515.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(515.0px, 316.0px); opacity: 1; } 21.50% { transform: translate(540.0px, 316.0px); opacity: 1; } 25.75% { transform: translate(540.0px, 316.0px); opacity: 1; } 26.95% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(490.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(490.0px, 316.0px); opacity: 1; } }
+  @keyframes q3 { 0.00% { transform: translate(465.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(465.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(490.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(490.0px, 316.0px); opacity: 1; } 21.50% { transform: translate(515.0px, 316.0px); opacity: 1; } 25.75% { transform: translate(515.0px, 316.0px); opacity: 1; } 26.75% { transform: translate(540.0px, 316.0px); opacity: 1; } 31.00% { transform: translate(540.0px, 316.0px); opacity: 1; } 32.20% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(465.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(465.0px, 316.0px); opacity: 1; } }
+  @keyframes q4 { 0.00% { transform: translate(440.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(440.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(465.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(465.0px, 316.0px); opacity: 1; } 21.50% { transform: translate(490.0px, 316.0px); opacity: 1; } 25.75% { transform: translate(490.0px, 316.0px); opacity: 1; } 26.75% { transform: translate(515.0px, 316.0px); opacity: 1; } 31.00% { transform: translate(515.0px, 316.0px); opacity: 1; } 32.00% { transform: translate(540.0px, 316.0px); opacity: 1; } 36.25% { transform: translate(540.0px, 316.0px); opacity: 1; } 37.45% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(440.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(440.0px, 316.0px); opacity: 1; } }
+  @keyframes q5 { 0.00% { transform: translate(415.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(415.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(440.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(440.0px, 316.0px); opacity: 1; } 21.50% { transform: translate(465.0px, 316.0px); opacity: 1; } 25.75% { transform: translate(465.0px, 316.0px); opacity: 1; } 26.75% { transform: translate(490.0px, 316.0px); opacity: 1; } 31.00% { transform: translate(490.0px, 316.0px); opacity: 1; } 32.00% { transform: translate(515.0px, 316.0px); opacity: 1; } 36.25% { transform: translate(515.0px, 316.0px); opacity: 1; } 37.25% { transform: translate(540.0px, 316.0px); opacity: 1; } 41.50% { transform: translate(540.0px, 316.0px); opacity: 1; } 42.70% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(415.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(415.0px, 316.0px); opacity: 1; } }
+  @keyframes q6 { 0.00% { transform: translate(390.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(390.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(415.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(415.0px, 316.0px); opacity: 1; } 21.50% { transform: translate(440.0px, 316.0px); opacity: 1; } 25.75% { transform: translate(440.0px, 316.0px); opacity: 1; } 26.75% { transform: translate(465.0px, 316.0px); opacity: 1; } 31.00% { transform: translate(465.0px, 316.0px); opacity: 1; } 32.00% { transform: translate(490.0px, 316.0px); opacity: 1; } 36.25% { transform: translate(490.0px, 316.0px); opacity: 1; } 37.25% { transform: translate(515.0px, 316.0px); opacity: 1; } 41.50% { transform: translate(515.0px, 316.0px); opacity: 1; } 42.50% { transform: translate(540.0px, 316.0px); opacity: 1; } 46.75% { transform: translate(540.0px, 316.0px); opacity: 1; } 47.95% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.00% { transform: translate(610.0px, 316.0px); opacity: 0; } 97.50% { transform: translate(390.0px, 316.0px); opacity: 0; } 100.00% { transform: translate(390.0px, 316.0px); opacity: 1; } }
+  @keyframes req { 0.00% { transform: translate(74.0px, 162.0px); opacity: 0; } 0.50% { transform: translate(74.0px, 162.0px); opacity: 1; } 3.00% { transform: translate(230.0px, 162.0px); opacity: 1; } 6.00% { transform: translate(416.0px, 162.0px); opacity: 1; } 10.00% { transform: translate(365.0px, 316.0px); opacity: 1; } 15.25% { transform: translate(365.0px, 316.0px); opacity: 1; } 16.25% { transform: translate(390.0px, 316.0px); opacity: 1; } 20.50% { transform: translate(390.0px, 316.0px); opacity: 1; } 21.50% { transform: translate(415.0px, 316.0px); opacity: 1; } 25.75% { transform: translate(415.0px, 316.0px); opacity: 1; } 26.75% { transform: translate(440.0px, 316.0px); opacity: 1; } 31.00% { transform: translate(440.0px, 316.0px); opacity: 1; } 32.00% { transform: translate(465.0px, 316.0px); opacity: 1; } 36.25% { transform: translate(465.0px, 316.0px); opacity: 1; } 37.25% { transform: translate(490.0px, 316.0px); opacity: 1; } 41.50% { transform: translate(490.0px, 316.0px); opacity: 1; } 42.50% { transform: translate(515.0px, 316.0px); opacity: 1; } 46.75% { transform: translate(515.0px, 316.0px); opacity: 1; } 47.75% { transform: translate(540.0px, 316.0px); opacity: 1; } 52.00% { transform: translate(540.0px, 316.0px); opacity: 1; } 54.00% { transform: translate(720.0px, 316.0px); opacity: 1; } 59.00% { transform: translate(720.0px, 316.0px); opacity: 1; } 60.00% { transform: translate(660.0px, 282.0px); opacity: 1; } 64.00% { transform: translate(660.0px, 196.0px); opacity: 1; } 65.00% { transform: translate(718.0px, 162.0px); opacity: 1; } 67.00% { transform: translate(718.0px, 162.0px); opacity: 1; } 70.00% { transform: translate(908.0px, 162.0px); opacity: 1; } 92.00% { transform: translate(908.0px, 162.0px); opacity: 1; } 94.00% { transform: translate(908.0px, 162.0px); opacity: 0; } 100.00% { transform: translate(908.0px, 162.0px); opacity: 0; } }
+  @keyframes kv0 { 0.00% { transform: translate(660.0px, 280.0px); opacity: 0; } 60.00% { transform: translate(660.0px, 280.0px); opacity: 0; } 60.30% { transform: translate(660.0px, 278.0px); opacity: 1; } 63.00% { transform: translate(660.0px, 200.0px); opacity: 1; } 63.40% { transform: translate(660.0px, 198.0px); opacity: 0; } 100.00% { transform: translate(660.0px, 198.0px); opacity: 0; } }
+  @keyframes kv1 { 0.00% { transform: translate(660.0px, 280.0px); opacity: 0; } 60.80% { transform: translate(660.0px, 280.0px); opacity: 0; } 61.10% { transform: translate(660.0px, 278.0px); opacity: 1; } 63.80% { transform: translate(660.0px, 200.0px); opacity: 1; } 64.20% { transform: translate(660.0px, 198.0px); opacity: 0; } 100.00% { transform: translate(660.0px, 198.0px); opacity: 0; } }
+  @keyframes kv2 { 0.00% { transform: translate(660.0px, 280.0px); opacity: 0; } 61.60% { transform: translate(660.0px, 280.0px); opacity: 0; } 61.90% { transform: translate(660.0px, 278.0px); opacity: 1; } 64.60% { transform: translate(660.0px, 200.0px); opacity: 1; } 65.00% { transform: translate(660.0px, 198.0px); opacity: 0; } 100.00% { transform: translate(660.0px, 198.0px); opacity: 0; } }
+  @keyframes kv3 { 0.00% { transform: translate(660.0px, 280.0px); opacity: 0; } 62.40% { transform: translate(660.0px, 280.0px); opacity: 0; } 62.70% { transform: translate(660.0px, 278.0px); opacity: 1; } 65.40% { transform: translate(660.0px, 200.0px); opacity: 1; } 65.80% { transform: translate(660.0px, 198.0px); opacity: 0; } 100.00% { transform: translate(660.0px, 198.0px); opacity: 0; } }
+  @keyframes tok0 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 70.00% { transform: translate(848.0px, 130.0px); opacity: 1; } 70.42% { transform: translate(848.0px, 90.0px); opacity: 1; } 78.60% { transform: translate(74.0px, 90.0px); opacity: 1; } 79.00% { transform: translate(74.0px, 128.0px); opacity: 1; } 79.30% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes tok1 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 72.60% { transform: translate(848.0px, 130.0px); opacity: 1; } 73.02% { transform: translate(848.0px, 90.0px); opacity: 1; } 81.20% { transform: translate(74.0px, 90.0px); opacity: 1; } 81.60% { transform: translate(74.0px, 128.0px); opacity: 1; } 81.90% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes tok2 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 75.20% { transform: translate(848.0px, 130.0px); opacity: 1; } 75.62% { transform: translate(848.0px, 90.0px); opacity: 1; } 83.80% { transform: translate(74.0px, 90.0px); opacity: 1; } 84.20% { transform: translate(74.0px, 128.0px); opacity: 1; } 84.50% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes tok3 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 77.80% { transform: translate(848.0px, 130.0px); opacity: 1; } 78.22% { transform: translate(848.0px, 90.0px); opacity: 1; } 86.40% { transform: translate(74.0px, 90.0px); opacity: 1; } 86.80% { transform: translate(74.0px, 128.0px); opacity: 1; } 87.10% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes tok4 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 80.40% { transform: translate(848.0px, 130.0px); opacity: 1; } 80.82% { transform: translate(848.0px, 90.0px); opacity: 1; } 89.00% { transform: translate(74.0px, 90.0px); opacity: 1; } 89.40% { transform: translate(74.0px, 128.0px); opacity: 1; } 89.70% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes tok5 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 83.00% { transform: translate(848.0px, 130.0px); opacity: 1; } 83.42% { transform: translate(848.0px, 90.0px); opacity: 1; } 91.60% { transform: translate(74.0px, 90.0px); opacity: 1; } 92.00% { transform: translate(74.0px, 128.0px); opacity: 1; } 92.30% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes tok6 { 0.00% { transform: translate(848.0px, 130.0px); opacity: 0; } 85.60% { transform: translate(848.0px, 130.0px); opacity: 1; } 86.02% { transform: translate(848.0px, 90.0px); opacity: 1; } 94.20% { transform: translate(74.0px, 90.0px); opacity: 1; } 94.60% { transform: translate(74.0px, 128.0px); opacity: 1; } 94.90% { transform: translate(74.0px, 128.0px); opacity: 0; } 100.00% { transform: translate(74.0px, 128.0px); opacity: 0; } }
+  @keyframes grt { 0.00% { transform: scaleX(0); } 0.00% { transform: scaleX(0); } 6.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes gpq { 0.00% { transform: scaleX(0); } 10.00% { transform: scaleX(0); } 52.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes gpc { 0.00% { transform: scaleX(0); } 52.00% { transform: scaleX(0); } 60.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes gnx { 0.00% { transform: scaleX(0); } 60.00% { transform: scaleX(0); } 64.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes gdq { 0.00% { transform: scaleX(0); } 64.00% { transform: scaleX(0); } 67.00% { transform: scaleX(1); } 97.00% { transform: scaleX(1); } 100.00% { transform: scaleX(0); } }
+  @keyframes pql { 0.00% { opacity: 0; } 40.00% { opacity: 0; } 44.00% { opacity: 1; } 97.00% { opacity: 1; } 100.00% { opacity: 0; } }
+</style>
+<rect class="bg" x="0" y="0" width="960" height="548" rx="10"/>
+<defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8a8985"/></marker></defs>
+<text class="ink title" x="24.0" y="34.0">At block 64 the KV transfer takes 27 ms, so the wait moves to the prefill queue (86% of TTFT)</text>
+<text class="muted small" x="24.0" y="54.0">Same setup as the block-size figure, at block 64: 2P (TP1) : 1D (TP2), ISL 4000 / OSL 200, c=256. Block 16: NIXL 351 ms, ITL 60.6 ms.</text>
+<path class="line" d="M848,130 L848,90 L74,90 L74,128" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#head)"/>
+<text class="muted small" x="470.0" y="84.0" text-anchor="middle">output tokens stream back to the client: one every 15.9 ms (ITL, server)</text>
+<rect x="24.0" y="130.0" width="100.0" height="64.0" rx="4" class="box" />
+<text class="ink label bold" x="74.0" y="158.0" text-anchor="middle">Client</text>
+<text class="muted small" x="74.0" y="176.0" text-anchor="middle">AIPerf</text>
+<rect x="170.0" y="130.0" width="120.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink label bold" x="230.0" y="158.0" text-anchor="middle">EPP router</text>
+<text class="muted small" x="230.0" y="176.0" text-anchor="middle">llm-d</text>
+<path class="line" d="M124,162 L168,162" stroke-width="1.5" fill="none" marker-end="url(#head)" />
+<path class="line" d="M290,162 L344,162" stroke-width="1.5" fill="none" marker-end="url(#head)" />
+<text class="ink small bold" x="24.0" y="222.0">router + sidecar + network</text>
+<text class="muted small" x="24.0" y="238.0">50 ms (residual)</text>
+<rect x="330.0" y="104.0" width="606.0" height="104.0" rx="8" class="pod" stroke-dasharray="5 4"/>
+<text class="muted small bold" x="342.0" y="122.0">Decode pod (TP2)</text>
+<rect x="346.0" y="130.0" width="140.0" height="64.0" rx="4" fill="#2a78d6" fill-opacity="0.14" stroke="#2a78d6" stroke-width="1.5" />
+<text class="ink label bold" x="416.0" y="158.0" text-anchor="middle">routing sidecar</text>
+<text class="muted small" x="416.0" y="176.0" text-anchor="middle">sends prefill first</text>
+<rect x="590.0" y="130.0" width="140.0" height="64.0" rx="4" fill="#eda100" fill-opacity="0.18" stroke="#eda100" stroke-width="1.5" id="dq"/>
+<text class="ink label bold" x="660.0" y="158.0" text-anchor="middle">decode queue</text>
+<text class="ink small" x="660.0" y="176.0" text-anchor="middle">52 ms</text>
+<rect x="776.0" y="130.0" width="144.0" height="64.0" rx="4" fill="#008300" fill-opacity="0.14" stroke="#008300" stroke-width="1.5" />
+<text class="ink label bold" x="848.0" y="158.0" text-anchor="middle">decode steps</text>
+<text class="ink small" x="848.0" y="176.0" text-anchor="middle">ITL 15.9 ms</text>
+<path class="line" d="M730,162 L774,162" stroke-width="1.5" fill="none" marker-end="url(#head)" />
+<rect x="330.0" y="252.0" width="606.0" height="120.0" rx="8" class="pod" stroke-dasharray="5 4"/>
+<text class="muted small bold" x="776.0" y="270.0">Prefill pods (2x TP1)</text>
+<rect x="346.0" y="280.0" width="214.0" height="72.0" rx="4" fill="#e34948" fill-opacity="0.12" stroke="#e34948" stroke-width="1.5" />
+<text class="ink label bold" x="453.0" y="298.0" text-anchor="middle">prefill queue</text>
+<text class="ink small bold" x="453.0" y="344.0" text-anchor="middle">4,778 ms waiting</text>
+<rect x="590.0" y="280.0" width="140.0" height="72.0" rx="4" fill="#eb6834" fill-opacity="0.16" stroke="#eb6834" stroke-width="1.5" class="pc"/>
+<text class="ink label bold" x="660.0" y="310.0" text-anchor="middle">prefill compute</text>
+<text class="ink small" x="660.0" y="328.0" text-anchor="middle">359 ms</text>
+<text class="muted small" x="776.0" y="304.0">KV stays in prefill HBM</text>
+<text class="muted small" x="776.0" y="320.0">until decode pulls it</text>
+<path class="line" d="M416,194 L416,278" stroke-width="1.5" fill="none" marker-end="url(#head)" />
+<text class="muted small" x="424.0" y="232.0">prefill request</text>
+<path d="M660,280 L660,196" stroke="#6250d6" stroke-width="3" fill="none" marker-end="url(#head)"/>
+<text class="ink small bold" x="670.0" y="222.0">NIXL KV pull, 27 ms</text>
+<text class="muted small" x="670.0" y="238.0">NVLink, cuda_ipc zero-copy</text>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(540px, 316px); animation: q0 16s linear infinite;"/>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(515px, 316px); animation: q1 16s linear infinite;"/>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(490px, 316px); animation: q2 16s linear infinite;"/>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(465px, 316px); animation: q3 16s linear infinite;"/>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(440px, 316px); animation: q4 16s linear infinite;"/>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(415px, 316px); animation: q5 16s linear infinite;"/>
+<rect x="-8" y="-8" width="16" height="16" rx="3" class="box" stroke-width="1" style="transform: translate(390px, 316px); animation: q6 16s linear infinite;"/>
+<g class="motion"><circle r="7" fill="#e87ba4" stroke="#ffffff" stroke-width="1.5" style="animation: req 16s linear infinite;"/></g>
+<g class="motion"><rect x="-5" y="-4" width="10" height="8" rx="2" fill="#6250d6" style="animation: kv0 16s linear infinite;"/></g>
+<g class="motion"><rect x="-5" y="-4" width="10" height="8" rx="2" fill="#6250d6" style="animation: kv1 16s linear infinite;"/></g>
+<g class="motion"><rect x="-5" y="-4" width="10" height="8" rx="2" fill="#6250d6" style="animation: kv2 16s linear infinite;"/></g>
+<g class="motion"><rect x="-5" y="-4" width="10" height="8" rx="2" fill="#6250d6" style="animation: kv3 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok0 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok1 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok2 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok3 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok4 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok5 16s linear infinite;"/></g>
+<g class="motion"><circle r="4.5" fill="#008300" style="animation: tok6 16s linear infinite;"/></g>
+<text class="ink label bold" x="24.0" y="410.0">Where the time goes before the first token (mean ms per request, c=256, bar to scale)</text>
+<rect x="24.0" y="424" width="8.6" height="32" fill="#2a78d6" style="transform-box: fill-box; transform-origin: left center; animation: grt 16s linear infinite;"/>
+<rect x="32.6" y="424" width="827.5" height="32" fill="#e34948" style="transform-box: fill-box; transform-origin: left center; animation: gpq 16s linear infinite;"/>
+<rect x="860.1" y="424" width="62.1" height="32" fill="#eb6834" style="transform-box: fill-box; transform-origin: left center; animation: gpc 16s linear infinite;"/>
+<rect x="922.3" y="424" width="4.7" height="32" fill="#6250d6" style="transform-box: fill-box; transform-origin: left center; animation: gnx 16s linear infinite;"/>
+<rect x="926.9" y="424" width="9.1" height="32" fill="#eda100" style="transform-box: fill-box; transform-origin: left center; animation: gdq 16s linear infinite;"/>
+<g style="animation: pql 16s linear infinite;"><text class="wt label bold" x="446.4" y="445.0" text-anchor="middle">prefill queue 4,778 ms</text>
+</g>
+<path class="line" d="M28.3,456 L28.3,466" stroke-width="1"/>
+<text class="ink small" x="24.0" y="478.0">router + sidecar + net 50 ms</text>
+<path class="line" d="M891.2,456 L891.2,466" stroke-width="1"/>
+<text class="ink small" x="891.2" y="478.0" text-anchor="end">prefill compute 359 ms</text>
+<path class="line" d="M924.6,456 L924.6,482" stroke-width="1"/>
+<text class="ink small bold" x="924.6" y="494.0" text-anchor="end">NIXL KV pull 27 ms</text>
+<path class="line" d="M931.5,456 L931.5,498" stroke-width="1"/>
+<text class="ink small" x="931.5" y="510.0" text-anchor="end">decode queue 52 ms</text>
+<text class="muted small" x="24.0" y="534.0">Then one token every 15.9 ms. The bar sums the 5 layers (5,265 ms); about 288 ms of the 5,553 ms client TTFT is not attributed to a layer.</text>
+</svg>
