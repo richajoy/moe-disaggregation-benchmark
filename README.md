@@ -1,6 +1,6 @@
 # MoE disaggregation benchmark
 
-**Aggregated or prefill/decode-disaggregated serving for a mixture-of-experts model? Ranked by requests that actually meet a latency target.**
+**Aggregated or prefill/decode-disaggregated serving for a mixture-of-experts model on 4x H100 and 8x A100? Ranked by requests that actually meet a latency target.**
 
 [![vLLM 0.32.0](https://img.shields.io/badge/vLLM-0.32.0-1f6feb)](https://github.com/vllm-project/vllm)
 [![llm-d 1.0](https://img.shields.io/badge/llm--d-1.0-eb6834)](https://github.com/llm-d/llm-d)
